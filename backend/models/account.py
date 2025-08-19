@@ -25,7 +25,7 @@ class Account(BareBaseModel):
     check_account = db.query(Account).filter(Account.username == data.username).first()
     
     if check_account : 
-      return 409 , None 
+      return 409, None, None
     
     else : 
       data.password = hash_password(data.password)
@@ -51,7 +51,7 @@ class Account(BareBaseModel):
       db.add(student)
       db.commit()
       db.refresh(student)
-    return 201 , account 
+    return 201 , account , student
   
   @staticmethod 
   def authenticate(db , username : str , password : str) : 

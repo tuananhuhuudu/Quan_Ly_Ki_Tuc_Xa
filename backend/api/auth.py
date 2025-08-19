@@ -1,0 +1,54 @@
+from typing import * 
+
+from jose import jwt , JWTError 
+from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm 
+from fastapi import APIRouter , Depends , status
+from database.init_db import get_db 
+from fastapi.responses import JSONResponse
+
+from models.account import Account
+from schemas.account import AccountCreate 
+
+from services.auth import create_access_token , get_current_user , admin_required 
+
+router = APIRouter()
+
+@router.post("/register")
+def register(
+    data: AccountCreate,
+    db: Session = Depends(get_db)
+):
+    try:
+        status_code, account, student = Account.create_account(db, data)
+
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "success": True if status_code == 201 else False,
+                "message": "Đăng kí tài khoản thành công" if status_code == 201 else "Tên đăng nhập đã tồn tại",
+                "payload": {
+                    "account": {"username": account.username} if status_code == 201 else None,
+                    "student": {
+                      "id" : student.id ,
+                      "name" : student.full_name , 
+                      "birth" : student.birth.strftime("%Y-%m-%d"),
+                      "gender" : student.gender , 
+                      "phone" : student.phone ,
+                      "email" : student.email
+                      } if status_code == 201 else None
+                }
+            }
+        )
+
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "Đã xảy ra lỗi khi đăng ký người dùng",
+                "error": str(e)
+            }
+        )
+        

@@ -1,8 +1,8 @@
 from pydantic_settings import BaseSettings 
 
-class Settings(BaseException):
+class Settings(BaseSettings):
   DATABASE_URL : str 
-  GROG_API_KEY : str 
+  GROQ_API_KEY : str 
   class Config : 
     env_file = ".env"
     
