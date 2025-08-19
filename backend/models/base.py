@@ -5,7 +5,7 @@ from sqlalchemy.sql import func
 
 @as_declarative
 class Base : 
-  __attract__ = True 
+  __abstract__ = True 
   __name__ : str 
   
   @declared_attr
