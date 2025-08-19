@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from schemas.token import TokenData
 from models.account import Account
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 def create_access_token(subject : dict , expires_delta : Optional[timedelta] = None):
   to_encode = subject.copy()
@@ -39,7 +39,7 @@ def get_current_user(
     headers={"WWW-Authenticate": "Bearer"},
   )
   try : 
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.SECURITY_ALGORITHM])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     user_id: str = payload.get("sub")
     if user_id is None:
       raise credentials_exception
