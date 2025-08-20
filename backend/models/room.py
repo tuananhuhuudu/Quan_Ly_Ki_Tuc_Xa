@@ -1,6 +1,6 @@
 from models.base import BareBaseModel 
 
-from sqlalchemy import Column , String , Integer , ForeignKey , DateTime , Float
+from sqlalchemy import Column , String , Integer , ForeignKey , DateTime , Float , Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -9,7 +9,7 @@ class Room(BareBaseModel):
   capacity = Column(Integer , nullable= False)
   current_occupancy = Column(Integer , nullable = False)
   price = Column(Float , nullable = False)
-  
+  active = Column(Boolean, default=True, nullable=False)
   # Quan hệ 
-  reservations = relationship("Reservation" , back_populates= "room")
+  # reservations = relationship("Reservation" , back_populates= "room")
   

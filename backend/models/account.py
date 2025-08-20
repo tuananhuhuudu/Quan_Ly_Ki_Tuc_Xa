@@ -18,7 +18,7 @@ class Account(BareBaseModel):
   updated_at = Column(DateTime(timezone=True), onupdate=func.now())
   
   ## Quan hệ 
-  student = relationship("Student" , back_populates = "account")
+  student = relationship("Student", back_populates="account", uselist=False)
   
   @staticmethod
   def create_account(db , data : AccountCreate):

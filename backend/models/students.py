@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from helpers.gender_enum import GenderEnum 
 
 class Student(BareBaseModel):
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("account.id"), unique=True, nullable=False)
 
     full_name = Column(String(255), nullable=False)
     birth = Column(DateTime, nullable=False)

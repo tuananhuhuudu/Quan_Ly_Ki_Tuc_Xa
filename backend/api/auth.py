@@ -64,7 +64,7 @@ def login(
             detail="Tên đăng nhập hoặc tài khoản không chính xác",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = create_access_token(subject={"sub": str(account.id)})
+    access_token = create_access_token(subject=str(account.id))
 
     
     return JSONResponse(
@@ -72,12 +72,12 @@ def login(
         content = {
             "success" : True , 
             "message" : "Đăng nhập thành công" ,
-            "payload" : {
-                "token" : token,
-                "token_type" : "bearer"
-            }
+            "access_token": access_token,
+            "token_type": "bearer",
         }
     )
+
+
     
 
 @router.get("/me")
@@ -96,3 +96,5 @@ def read_me(
             }
         }
     )
+
+
