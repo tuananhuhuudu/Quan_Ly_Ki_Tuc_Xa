@@ -1,0 +1,28 @@
+# Sử dụng image Python 3.11.5 chính thức làm base (đã cài Python sẵn)
+FROM python:3.11.5  
+
+# Không tạo file .pyc và thư mục __pycache__ khi chạy code Python
+ENV PYTHONDONTWRITEBYTECODE=1  
+
+# Bật chế độ unbuffered cho Python → log in ra console ngay lập tức (không bị cache)
+ENV PYTHONUNBUFFERED=1  
+
+# Cập nhật danh sách package của hệ điều hành và cài netcat (dùng để kiểm tra kết nối mạng, đợi service khác start, v.v.)
+RUN apt-get update && apt-get install -y netcat-openbsd  
+
+# Tạo thư mục /backend trong container để chứa code backend
+RUN mkdir /backend  
+
+# Đặt thư mục làm việc mặc định là /backend (mọi lệnh sau sẽ chạy ở đây)
+WORKDIR /backend  
+
+# Copy toàn bộ code hiện tại trên máy host vào thư mục /backend của container
+COPY . /backend/  
+
+# Cài đặt các thư viện Python cần thiết từ file requirements.txt (không lưu cache để giảm dung lượng image)
+RUN pip install --no-cache-dir -r requirements.txt  
+
+# Mở cổng 8000 của container (FastAPI/Uvicorn thường chạy ở cổng này)
+EXPOSE 8000  
+
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
