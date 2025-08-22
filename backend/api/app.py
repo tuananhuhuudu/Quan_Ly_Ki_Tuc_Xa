@@ -7,6 +7,7 @@ from api import student
 from api import room
 from api import reservation_contact
 from api import invoice
+from ai.api import chatbot
 def create_app()->FastAPI:
   app = FastAPI()
   
@@ -16,4 +17,5 @@ def create_app()->FastAPI:
   app.include_router(router=room.router)
   app.include_router(router=reservation_contact.router)
   app.include_router(router=invoice.router)
+  app.include_router(router=chatbot.router)
   return app 
