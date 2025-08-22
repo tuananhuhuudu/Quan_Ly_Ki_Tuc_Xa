@@ -1,44 +1,51 @@
-from typing import * 
+from typing import Any, Dict
 
-from jose import jwt , JWTError 
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordRequestForm , OAuth2PasswordBearer
-from fastapi import APIRouter , Depends , status , HTTPException
-from database.init_db import get_db 
-from fastapi.responses import JSONResponse 
 
+from database.init_db import get_db
 from models.account import Account
-from schemas.account import AccountCreate 
+from schemas.account import AccountCreate
+from services.auth import create_access_token, get_current_user
 
-from services.auth import create_access_token , get_current_user , admin_required 
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-router = APIRouter()
 
-@router.post("/register")
+@router.post("/register", summary="Đăng ký tài khoản mới")
 def register(
     data: AccountCreate,
     db: Session = Depends(get_db)
-):
+) -> JSONResponse:
+    """
+    API đăng ký tài khoản mới cho sinh viên.
+    - Kiểm tra username trùng.
+    - Tạo mới Account + Student.
+    """
     try:
         status_code, account, student = Account.create_account(db, data)
+
+        success = status_code == 201
+        message = "Đăng ký tài khoản thành công" if success else "Tên đăng nhập đã tồn tại"
 
         return JSONResponse(
             status_code=status_code,
             content={
-                "success": True if status_code == 201 else False,
-                "message": "Đăng kí tài khoản thành công" if status_code == 201 else "Tên đăng nhập đã tồn tại",
+                "success": success,
+                "message": message,
                 "payload": {
-                    "account": {"username": account.username} if status_code == 201 else None,
+                    "account": {"username": account.username} if success else None,
                     "student": {
-                      "id" : student.id ,
-                      "name" : student.full_name , 
-                      "birth" : student.birth.strftime("%Y-%m-%d"),
-                      "gender" : student.gender , 
-                      "phone" : student.phone ,
-                      "email" : student.email
-                      } if status_code == 201 else None
-                }
-            }
+                        "id": student.id,
+                        "name": student.full_name,
+                        "birth": student.birth.strftime("%Y-%m-%d"),
+                        "gender": student.gender,
+                        "phone": student.phone,
+                        "email": student.email,
+                    } if success else None,
+                },
+            },
         )
 
     except Exception as e:
@@ -48,53 +55,56 @@ def register(
             content={
                 "success": False,
                 "message": "Đã xảy ra lỗi khi đăng ký người dùng",
-                "error": str(e)
-            }
+                "error": str(e),
+            },
         )
-        
-@router.post("/login")
+
+
+@router.post("/login", summary="Đăng nhập và lấy access token")
 def login(
-    form_data : OAuth2PasswordRequestForm = Depends(),
-    db : Session = Depends(get_db)
-):
-    status_code , account = Account.authenticate(db , form_data.username , form_data.password)
-    if status_code != 200 : 
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+) -> JSONResponse:
+    """
+    API đăng nhập.
+    - Kiểm tra username + password.
+    - Trả về JWT access_token nếu thành công.
+    """
+    status_code, account = Account.authenticate(db, form_data.username, form_data.password)
+    if status_code != 200:
         raise HTTPException(
-            status_code=status_code , 
-            detail="Tên đăng nhập hoặc tài khoản không chính xác",
+            status_code=status_code,
+            detail="Tên đăng nhập hoặc mật khẩu không chính xác",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token = create_access_token(subject=str(account.id))
 
-    
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content = {
-            "success" : True , 
-            "message" : "Đăng nhập thành công" ,
+        content={
+            "success": True,
+            "message": "Đăng nhập thành công",
             "access_token": access_token,
             "token_type": "bearer",
-        }
+        },
     )
 
 
-    
-
-@router.get("/me")
-def read_me(
-    current_user : Account = Depends(get_current_user)
-): 
+@router.get("/me", summary="Lấy thông tin người dùng hiện tại")
+def read_me(current_user: Account = Depends(get_current_user)) -> JSONResponse:
+    """
+    API lấy thông tin tài khoản hiện tại từ JWT token.
+    """
     return JSONResponse(
-        status_code=status.HTTP_200_OK, 
+        status_code=status.HTTP_200_OK,
         content={
-            "success" : True , 
-            "message" : "Thông tin người dùng",
-            "payload" : {
-                "id" : current_user.id ,
-                "username" : current_user.username , 
-                "role" : current_user.role
-            }
-        }
+            "success": True,
+            "message": "Thông tin người dùng",
+            "payload": {
+                "id": current_user.id,
+                "username": current_user.username,
+                "role": current_user.role,
+            },
+        },
     )
-
-

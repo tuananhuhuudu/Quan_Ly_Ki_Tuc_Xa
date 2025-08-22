@@ -4,5 +4,7 @@ from typing import Optional
 
 class ReservationCreate(BaseModel):
   room_id : int 
-  start_date : date 
-  end_date : date 
+  booking_date : date 
+  
+class ChangeRoomRequest(BaseModel):
+  new_room_id: int

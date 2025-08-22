@@ -8,7 +8,6 @@ from helpers.gender_enum import GenderEnum
 
 class Student(BareBaseModel):
     account_id = Column(Integer, ForeignKey("account.id"), unique=True, nullable=False)
-
     full_name = Column(String(255), nullable=False)
     birth = Column(DateTime, nullable=False)
     gender = Column(SQLENUM(GenderEnum, name="gender_enum"), nullable=False)  
@@ -16,3 +15,4 @@ class Student(BareBaseModel):
     email = Column(String(255), unique=True, nullable=False) 
 
     account = relationship("Account", back_populates="student")
+    reservations = relationship("Reservation", back_populates="student")

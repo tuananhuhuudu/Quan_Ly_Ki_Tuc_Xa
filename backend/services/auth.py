@@ -11,7 +11,7 @@ from schemas.token import TokenData
 from models.account import Account
 
 # OAuth2
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # Tạo access token
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
