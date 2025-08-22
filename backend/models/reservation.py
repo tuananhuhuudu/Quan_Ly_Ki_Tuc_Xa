@@ -10,7 +10,7 @@ class Reservation(BareBaseModel):
   student_id = Column(Integer , ForeignKey("student.id") , nullable= False)
   room_id = Column(Integer , ForeignKey("room.id") , nullable = False)
   booking_date = Column(DateTime(timezone=True), server_default=func.now())
-  start_date = Column(Date, nullable=False , default= None)
+  start_date = Column(Date, nullable=True , default= None)
   status = Column(SQLENUM(ReservationStatus), default=ReservationStatus.PENDING)
   
   # Quana hệ 

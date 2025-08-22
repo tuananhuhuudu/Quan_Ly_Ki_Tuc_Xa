@@ -80,7 +80,40 @@ def create_reservation(
         }
     })
 
+@student_router.get("/contracts")
+def get_my_contracts(
+    db: Session = Depends(get_db),
+    current_user: Account = Depends(get_current_user)
+):
+    student = db.query(Student).filter(Student.account_id == current_user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
 
+    contracts = (
+        db.query(Contract)
+        .join(Reservation, Contract.reservation_id == Reservation.id)
+        .filter(Reservation.student_id == student.id)
+        .all()
+    )
+
+    if not contracts:
+        raise HTTPException(status_code=404, detail="No contracts found")
+
+    return JSONResponse({
+        "count": len(contracts),
+        "data": [
+            {
+                "id": c.id,
+                "reservation_id": c.reservation_id,
+                "start_date": str(c.start_date),
+                "end_date": str(c.end_date),
+                "status": c.status.value,
+                "room_id": c.reservation.room_id
+            }
+            for c in contracts
+        ]
+    })
+    
 @student_router.delete("/booking/{reservation_id}/cancel")
 def cancel_reservation(
     reservation_id: int,
@@ -144,6 +177,36 @@ def get_reservations(
 
 # ----------------- API Admin -----------------
 admin_router = APIRouter(prefix="/admin", tags=["Admin Reservation & Contract"])
+
+@admin_router.get("/contract/{contract_id}")
+def get_contract_detail(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: Account = Depends(admin_required),
+):
+    contract = (
+        db.query(Contract)
+        .join(Reservation, Contract.reservation_id == Reservation.id)
+        .join(Student, Reservation.student_id == Student.id)
+        .filter(Contract.id == contract_id)
+        .first()
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    return JSONResponse({
+        "id": contract.id,
+        "reservation_id": contract.reservation_id,
+        "start_date": str(contract.start_date),
+        "end_date": str(contract.end_date),
+        "status": contract.status.value,
+        "student": {
+            "id": contract.reservation.student.id,
+            "name": contract.reservation.student.full_name,
+            "email": contract.reservation.student.email,
+        },
+        "room_id": contract.reservation.room_id
+    })
 
 
 @admin_router.get("/reservations")
